@@ -68,33 +68,31 @@ class system(object):
 		self.Xa = ( self.a + self.a_dag )
 		self.Xb = ( self.b + self.b_dag )
 
-		if ( self.dvice == 'TRSM1' ):
-			energy_filename = "qubit_params/FOR_Elvl_Ec0.192_Ej14.155.txt"
-			charge_op_filename = "qubit_params/FOR_charge_op_Ec0.192_Ej14.155.txt"
-		elif ( self.dvice == 'TRSM2' ):
-			energy_filename = "qubit_params/FOR_Elvl_Ec-0.221_w015.4.txt"
-			charge_op_filename = "qubit_params/FOR_charge_op_Ec-0.221_w015.4.txt"
-		elif ( self.dvice == 'QUTR1' ):
-			energy_filename = "qubit_params/Elvl_QTM_Ec0.192_Ej14.155.txt"
-			charge_op_filename = "qubit_params/charge_op_QTM_Ec0.192_Ej14.155.txt" 
-
-
-		energy_levels = np.loadtxt( energy_filename )*2*np.pi
-		charge_op = np.loadtxt( charge_op_filename )
-		H_qb_IS = np.zeros( (qubit_dim,qubit_dim), dtype='float64' )
-		for i in range(qubit_dim):
-			H_qb_IS[i,i] = energy_levels[i]
-		if w01<0:
-			self.w01 = H_qb_IS[1,1] - H_qb_IS[0,0]
-		else:
+		if ( self.dvice == 'TRSM0' ):
 			self.w01 = w01
+			self.anh = 99999999
 
-		if qubit_dim > 2:
-			self.anh = H_qb_IS[2,2] - 2*H_qb_IS[1,1]
 		else:
-			self.anh = 0
 
-		print('anh=',self.anh/(2*np.pi))
+			if ( self.dvice == 'TRSM1' ):
+				energy_filename = "qubit_params/FOR_Elvl_Ec0.192_Ej14.155.txt"
+				charge_op_filename = "qubit_params/FOR_charge_op_Ec0.192_Ej14.155.txt"
+			elif ( self.dvice == 'TRSM2' ):
+				energy_filename = "qubit_params/FOR_Elvl_Ec-0.221_w015.4.txt"
+				charge_op_filename = "qubit_params/FOR_charge_op_Ec-0.221_w015.4.txt"
+			elif ( self.dvice == 'QUTR1' ):
+				energy_filename = "qubit_params/Elvl_QTM_Ec0.192_Ej14.155.txt"
+				charge_op_filename = "qubit_params/charge_op_QTM_Ec0.192_Ej14.155.txt" 
+
+			energy_levels = np.loadtxt( energy_filename )*2*np.pi
+			charge_op = np.loadtxt( charge_op_filename )
+
+			H_qb_IS = np.zeros( (qubit_dim,qubit_dim), dtype='float64' )
+			for i in range(qubit_dim):
+				H_qb_IS[i,i] = energy_levels[i]
+			self.w01 = H_qb_IS[1,1] - H_qb_IS[0,0]
+			self.anh = H_qb_IS[2,2] - 2*H_qb_IS[1,1]
+
 
 		#===========================
 		#== cavity and drive Hamiltonian

@@ -10,11 +10,11 @@ pi=np.pi
 g = 0.05 * 2*pi
 w = 5.5 * 2*pi
 w01 = 5 * 2*pi
-Ad= 0.037 * 2*np.pi * 0
+Ad= 0.002 * 2*np.pi 
 wd = 5.5 * 2*np.pi
 gamma=0.01 * 2*np.pi
 
-tmax = 350
+tmax = 800
 tint = 0.1
 times = np.arange( 0, tmax, tint )
 nsteps = len( times )
@@ -25,7 +25,7 @@ pop01 = np.zeros(  nsteps )
 n_arr = np.zeros(  nsteps)
 
 s = system( w01=w01,w=w, g=g, wd=wd,gamma=gamma,Ad=Ad,\
-           cavity_dim=4, qubit_dim=2, dvice='TRSM1',\
+           cavity_dim=4, qubit_dim=2, dvice='TRSM0',\
            atol=1e-8,rtol=1e-6, max_step=1e-3, dim_exp=70, qb_ini=[1], coupling_type='00' )
 s.set_initial_cs_state( 0 )
 s.initialise_density_matrix()
