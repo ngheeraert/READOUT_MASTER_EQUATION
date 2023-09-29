@@ -156,6 +156,14 @@ class system(object):
 
 		return np.trace( op.dot(self.rho) )
 
+	def renyi_entropy( self ):
+
+		return 1.0 - np.trace( self.rho.dot(self.rho) )
+
+	def renyi_entropy_2( self, rho_in ):
+
+		return 1.0 - np.trace( rho_in.dot(rho_in) )
+
 	def set_initial_qb_state( self, qb_state ):
 
 		for i in range( self.qubit_dim ):
@@ -294,6 +302,7 @@ class system(object):
 		pop_arr = np.zeros( (nsteps, self.qubit_dim+1), dtype='float64' )
 		pop_arr_mean = np.zeros( (nsteps, self.qubit_dim+1), dtype='float64' )
 		n_arr = np.zeros( (nsteps,2), dtype='float64' )
+		entropy_arr = np.zeros( (nsteps), dtype='float64' )
 
 		pplt_buffer = np.zeros( (self.qubit_dim,int(1/(times[1]-times[0]))), dtype='float64' )
 
@@ -305,10 +314,10 @@ class system(object):
 		pop_arr_mean[:,0] = times
 		for i in range( nsteps ):
 			partial_rho = partial_trace( rhos[i], [self.qubit_dim,self.cavity_dim], [0] )
+			entropy_arr[i] = self.renyi_entropy_2(rhos[i])
 			for j in range( self.qubit_dim ):
 				pplt_buffer[j,:] = np.roll( pplt_buffer[j,:],1 )
-				pplt_buffer[j,0] = np.real( partial_rho[j,j] )
-
+				pplt_buffer[j] = np.real( partial_rho[j,j] )
 				pop_arr[i,j+1] = np.real( partial_rho[j,j] )
 				pop_arr_mean[i,j+1] = np.mean( pplt_buffer[j,:] )
 
@@ -316,6 +325,8 @@ class system(object):
 		np.savetxt( filename, pop_arr )
 		filename = 'data/MPPLT_' + self.paramchar(times[-1]) + '.d'
 		np.savetxt( filename, pop_arr_mean )
+		filename = 'data/ENTROPY_' + self.paramchar(times[-1]) + '.d'
+		np.savetxt( filename, entropy_arr )
 		#plt.plot( pop_arr2[:,0], pop_arr2[:,1]*1.01 )
 		#for j in lvl_plot:
 		#	plt.plot( pop_arr[:,0], pop_arr[:,j+1] )
@@ -339,6 +350,21 @@ class system(object):
 		filename = 'data/Qfunction_' + self.paramchar(times[-1])  + '_ML'+str(max_lambda)+ '.d'
 		np.savetxt( filename, qfunction_arr )
 
+		#-- entropy_plot
+		plt.plot( times, n_arr[:,1] )
+		plt.xlabel(r'$t$')
+		plt.ylabel(r'$n_{cav}$')
+		plt.savefig( "figures/Entropy_" + self.paramchar(times[-1])+ '.pdf', format='pdf'  )
+		plt.show()
+
+		#-- entropy_plot
+		plt.plot( times, entropy_arr )
+		plt.xlabel(r'$t$')
+		plt.ylabel('Entropy')
+		plt.savefig( "figures/Entropy_" + self.paramchar(times[-1])+ '.pdf', format='pdf'  )
+		plt.show()
+		plt.close()
+
 		#-- non log plot
 		ext = (-max_lambda, max_lambda, -max_lambda, max_lambda)
 		interval = np.linspace(0.00, 1)
@@ -351,7 +377,6 @@ class system(object):
 		plt.xlabel(r'$\varphi$')
 		plt.ylabel(r'$Q$')
 		plt.savefig( "figures/Qfunction_" + self.paramchar(times[-1]) + '_ML'+str(max_lambda) + '.pdf', format='pdf'  )
-
 		plt.close()
 
 		#-- log plot
