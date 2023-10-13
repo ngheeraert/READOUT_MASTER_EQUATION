@@ -166,6 +166,7 @@ class system(object):
 
 	def set_initial_qb_state( self, qb_state ):
 
+		self.qb_ini = qb_state
 		for i in range( self.qubit_dim ):
 			self.initial_qb_state[ i ] = 0.0
 
