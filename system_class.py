@@ -345,11 +345,11 @@ class system(object):
 		re_lambda_list = np.linspace( -max_lambda, max_lambda, 70 )
 		im_lambda_list = np.linspace( -max_lambda, max_lambda, 70 )
 
-		rho_cav = partial_trace( rhos[-1], [self.qubit_dim,self.cavity_dim], [1] )
-		min_val = 0.01
-		qfunction_arr = q_function( rho_cav, re_lambda_list, im_lambda_list, self.dim_exp, min_val )
-		filename = 'data/Qfunction_' + self.paramchar(times[-1])  + '_ML'+str(max_lambda)+ '.d'
-		np.savetxt( filename, qfunction_arr )
+		#rho_cav = partial_trace( rhos[-1], [self.qubit_dim,self.cavity_dim], [1] )
+		#min_val = 0.01
+		##qfunction_arr = q_function( rho_cav, re_lambda_list, im_lambda_list, self.dim_exp, min_val )
+		#filename = 'data/Qfunction_' + self.paramchar(times[-1])  + '_ML'+str(max_lambda)+ '.d'
+		#np.savetxt( filename, qfunction_arr )
 
 		#-- entropy_plot
 		plt.plot( times, n_arr[:,1] )
@@ -367,34 +367,34 @@ class system(object):
 		plt.close()
 
 		#-- non log plot
-		ext = (-max_lambda, max_lambda, -max_lambda, max_lambda)
-		interval = np.linspace(0.00, 1)
-		colors = plt.cm.magma(interval)
-		my_cmap = LinearSegmentedColormap.from_list('name', colors)
+		#ext = (-max_lambda, max_lambda, -max_lambda, max_lambda)
+		#interval = np.linspace(0.00, 1)
+		#colors = plt.cm.magma(interval)
+		#my_cmap = LinearSegmentedColormap.from_list('name', colors)
 
-		zmin, zmax = min_val, qfunction_arr.max()
-		plt.imshow( qfunction_arr, extent=ext, cmap=my_cmap  )
-		plt.colorbar()
-		plt.xlabel(r'$\varphi$')
-		plt.ylabel(r'$Q$')
-		plt.savefig( "figures/Qfunction_" + self.paramchar(times[-1]) + '_ML'+str(max_lambda) + '.pdf', format='pdf'  )
-		plt.close()
+		#zmin, zmax = min_val, qfunction_arr.max()
+		#plt.imshow( qfunction_arr, extent=ext, cmap=my_cmap  )
+		#plt.colorbar()
+		#plt.xlabel(r'$\varphi$')
+		#plt.ylabel(r'$Q$')
+		#plt.savefig( "figures/Qfunction_" + self.paramchar(times[-1]) + '_ML'+str(max_lambda) + '.pdf', format='pdf'  )
+		#plt.close()
 
 		#-- log plot
-		ext = (-max_lambda, max_lambda, -max_lambda, max_lambda)
-		interval = np.linspace(0.00, 1)
-		colors = plt.cm.magma(interval)
-		my_cmap = LinearSegmentedColormap.from_list('name', colors)
+		#ext = (-max_lambda, max_lambda, -max_lambda, max_lambda)
+		#interval = np.linspace(0.00, 1)
+		#colors = plt.cm.magma(interval)
+		#my_cmap = LinearSegmentedColormap.from_list('name', colors)
 
-		zmin, zmax = min_val, qfunction_arr.max()
-		norm=LogNorm(vmin=zmin, vmax=zmax)
-		plt.imshow( qfunction_arr, extent=ext, norm=norm, cmap=my_cmap )
-		plt.colorbar()
-		plt.xlabel(r'$\varphi$')
-		plt.ylabel(r'$Q$')
-		plt.savefig( "figures/LOG_Qfunction_" + self.paramchar(times[-1]) + '_ML'+str(max_lambda)+'.pdf', format='pdf'  )
+		#zmin, zmax = min_val, qfunction_arr.max()
+		#norm=LogNorm(vmin=zmin, vmax=zmax)
+		#plt.imshow( qfunction_arr, extent=ext, norm=norm, cmap=my_cmap )
+		#plt.colorbar()
+		#plt.xlabel(r'$\varphi$')
+		#plt.ylabel(r'$Q$')
+		#plt.savefig( "figures/LOG_Qfunction_" + self.paramchar(times[-1]) + '_ML'+str(max_lambda)+'.pdf', format='pdf'  )
 
-		plt.close()
+		#plt.close()
 
 	def save_husimi_for_gif(self, times, rhos, max_lambda, frame_nb, log ):
 
