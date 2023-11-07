@@ -80,6 +80,9 @@ class system(object):
 			elif ( self.dvice == 'TRSM2' ):
 				energy_filename = "qubit_params/FOR_Elvl_Ec-0.221_w015.4.txt"
 				charge_op_filename = "qubit_params/FOR_charge_op_Ec-0.221_w015.4.txt"
+			elif ( self.dvice == 'TRSM3' ):
+				energy_filename = "../MPOL_DCT_FOR/qubit_params/FOR_Elvl_BENCHMARK.txt"
+				charge_op_filename = "../MPOL_DCT_FOR/qubit_params/FOR_charge_op_BENCHMARK.txt"
 			elif ( self.dvice == 'QUTR1' ):
 				energy_filename = "qubit_params/Elvl_QTM_Ec0.192_Ej14.155.txt"
 				charge_op_filename = "qubit_params/charge_op_QTM_Ec0.192_Ej14.155.txt" 
@@ -91,7 +94,10 @@ class system(object):
 			for i in range(qubit_dim):
 				H_qb_IS[i,i] = energy_levels[i]
 			self.w01 = H_qb_IS[1,1] - H_qb_IS[0,0]
-			self.anh = H_qb_IS[2,2] - 2*H_qb_IS[1,1]
+			if qubit_dim>2:
+				self.anh = H_qb_IS[2,2] - 2*H_qb_IS[1,1]
+			else:
+				self.anh = 99
 
 
 		#===========================
@@ -114,7 +120,7 @@ class system(object):
 		elif ( coupling_type == '11' ):
 
 			self.H_qb = np.kron( H_qb_IS, self.ide_cav )
-			g_qc = - self.g*charge_op[ :qubit_dim , :qubit_dim ] / charge_op[ 0,1 ]
+			g_qc = - self.g*charge_op[ :qubit_dim , :qubit_dim ]# / charge_op[ 0,1 ]
 			self.H_coupling = np.kron( g_qc, a_temp + np.transpose(a_temp)  )
 
 		elif ( coupling_type == '01' ):
@@ -288,8 +294,8 @@ class system(object):
 
 	def paramchar(self, tmax):
 
-		return ('tmax{:4d}_Nq{:2d}_Nc{:2d}_amp{:7.4f}_kappa{:7.4f}_wq{:7.4f}_anh{:7.4f}_wc{:7.4f}_wd{:7.4f}_ms{:.0e}_dimexp{:}_qb'+str(self.qb_ini)+'_{:}_'+self.dvice)\
-				.format( int(tmax), self.qubit_dim, self.cavity_dim, self.Ad/(2.0*pi), self.gamma/(2.0*pi), self.w01/(2.0*pi), self.anh/(2.0*pi),self.w/(2.0*pi), self.wd/(2.0*pi), self.max_step, self.dim_exp, self.coupling_type ).replace(" ","")
+		return ('tmax{:4d}_Nq{:2d}_Nc{:2d}_amp{:7.4f}_kappa{:7.4f}_wq{:7.4f}_anh{:7.4f}_wc{:7.4f}_g{:7.4f}_wd{:7.4f}_ms{:.0e}_dimexp{:}_qb'+str(self.qb_ini)+'_{:}_'+self.dvice)\
+				.format( int(tmax), self.qubit_dim, self.cavity_dim, self.Ad/(2.0*pi), self.gamma/(2.0*pi), self.w01/(2.0*pi), self.anh/(2.0*pi),self.w/(2.0*pi), self.g/(2.0*pi), self.wd/(2.0*pi), self.max_step, self.dim_exp, self.coupling_type ).replace(" ","")
 
 	def save_and_plot(self, times, rhos, lvl_plot=[0], max_lambda=7 ):
 
