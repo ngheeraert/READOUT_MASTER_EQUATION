@@ -143,8 +143,7 @@ class system(object):
 
 		evalue, evec = np.linalg.eig( self.H )  
 		sorted_indices = np.argsort( evalue )
-		self.eig_vec = evec[ :, sorted_indices ]
-		self.eig_val = evalue[ sorted_indices ]
+		self.eig_vec = evec[ sorted_indices ]
 
 		print("===============================================" )
 		print("Nq, Nc  = {:d}, {:d}".format( self.qubit_dim, self.cavity_dim ) )
@@ -173,36 +172,21 @@ class system(object):
 
 		return 1.0 - np.trace( rho_in.dot(rho_in) )
 
-	def set_initial_qb_state( self, qb_state ):
+	def set_initial_qb_state( self, qb_state, state_type='dressed' ):
 
-		for i in range(self.qubit_dim):
-			self.initial_qb_state[ i ] = 0.0
+		self.initial_qb_state = 0.0
+		if state_type=='bare':
+			self.qb_ini = qb_state.append('B')
+			for qubit_level in qb_state:
+				self.initial_qb_state[ level ] = 1.0
 
-		for i in range(len(qb_state)):
-			self.initial_qb_state[ qb_state[i] ] = 1.0
-
-		self.qb_ini = qb_state
-		self.qb_ini.append('B')
+		elif state_type=='dressed':
+			self.qb_ini = qb_state.append('D')
+			for qubit_level in qb_state:
+				self.initial_qb_state += self.eig_vec[:, qubit_level ]
 
 		norm = np.sum( np.abs(self.initial_qb_state)**2 )
 		self.initial_qb_state /= np.sqrt(norm)
-
-	def set_initial_qb_cav_dm( self, qb_state ):
-
-		qb_cav_state = np.zeros( self.sys_dim )
-
-		for qubit_level in qb_state:
-			qb_cav_state += self.eig_vec[:, qubit_level ]
-
-		self.qb_ini = qb_state
-		self.qb_ini.append('D')
-
-		norm = np.sum( np.abs(qb_cav_state)**2 )
-		qb_cav_state /= np.sqrt(norm)
-
-		self.st_ini = qb_cav_state
-		self.rho_ini = np.outer( qb_cav_state, np.conj(qb_cav_state) )
-		self.rho = np.outer( qb_cav_state, np.conj(qb_cav_state) )
 
 	def set_initial_photon_state( self, n ):
 
@@ -319,7 +303,7 @@ class system(object):
 		return ('tmax{:4d}_Nq{:2d}_Nc{:2d}_amp{:7.4f}_kappa{:7.4f}_wq{:7.4f}_anh{:7.4f}_wc{:7.4f}_g{:7.4f}_wd{:7.4f}_ms{:.0e}_dimexp{:}_qb'+str(self.qb_ini)+'_{:}_'+self.dvice)\
 				.format( int(tmax), self.qubit_dim, self.cavity_dim, self.Ad/(2.0*pi), self.gamma/(2.0*pi), self.w01/(2.0*pi), self.anh/(2.0*pi),self.w/(2.0*pi), self.g/(2.0*pi), self.wd/(2.0*pi), self.max_step, self.dim_exp, self.coupling_type ).replace(" ","")
 
-	def save_and_plot(self, times, rhos, lvl_plot=[1], max_lambda=7 ):
+	def save_and_plot(self, times, rhos, lvl_plot=[0], max_lambda=7 ):
 
 		import matplotlib.pyplot as plt
 		from matplotlib.colors import LinearSegmentedColormap
@@ -329,7 +313,7 @@ class system(object):
 		nsteps = len(times)
 
 		pop_arr = np.zeros( (nsteps, self.qubit_dim+1), dtype='float64' )
-		pop_arr_dressed = np.zeros( (nsteps, self.qubit_dim+1), dtype='float64' )
+		pop_arr_mean = np.zeros( (nsteps, self.qubit_dim+1), dtype='float64' )
 		n_arr = np.zeros( (nsteps,2), dtype='float64' )
 		entropy_arr = np.zeros( (nsteps), dtype='float64' )
 
@@ -340,27 +324,26 @@ class system(object):
 		vac = np.kron( vac_qb, self.ide_cav )  
 
 		pop_arr[:,0] = times
-		pop_arr_dressed[:,0] = times
+		pop_arr_mean[:,0] = times
 		for i in range( nsteps ):
 			partial_rho = partial_trace( rhos[i], [self.qubit_dim,self.cavity_dim], [0] )
 			entropy_arr[i] = self.renyi_entropy_2(rhos[i])
 			for j in range( self.qubit_dim ):
+				pplt_buffer[j,:] = np.roll( pplt_buffer[j,:],1 )
+				pplt_buffer[j] = np.real( partial_rho[j,j] )
 				pop_arr[i,j+1] = np.real( partial_rho[j,j] )
-				pop_arr_dressed[i,j+1] = np.real( self.eig_vec[:,j].dot(rhos[i]).dot(self.eig_vec[:,j]) )
+				pop_arr_mean[i,j+1] = np.mean( pplt_buffer[j,:] )
 
 		filename = 'data/PPLT_' + self.paramchar(times[-1]) + '.d'
 		np.savetxt( filename, pop_arr )
-		filename = 'data/DPPLT_' + self.paramchar(times[-1]) + '.d'
-		np.savetxt( filename, pop_arr_dressed )
+		filename = 'data/MPPLT_' + self.paramchar(times[-1]) + '.d'
+		np.savetxt( filename, pop_arr_mean )
 		filename = 'data/ENTROPY_' + self.paramchar(times[-1]) + '.d'
 		np.savetxt( filename, entropy_arr )
 		#plt.plot( pop_arr2[:,0], pop_arr2[:,1]*1.01 )
-		for j in lvl_plot:
-			plt.plot( pop_arr_dressed[:,0], pop_arr_dressed[:,j+1] )
-		plt.xlabel(r'$t$')
-		plt.ylabel('PPLT')
-		plt.savefig( "figures/PPLT_" + self.paramchar(times[-1])+ '.pdf', format='pdf'  )
-		plt.show()
+		#for j in lvl_plot:
+		#	plt.plot( pop_arr[:,0], pop_arr[:,j+1] )
+		#plt.show()
 
 		n_arr[:,0] = times
 		for i in range( nsteps ):
@@ -384,16 +367,16 @@ class system(object):
 		plt.plot( times, n_arr[:,1] )
 		plt.xlabel(r'$t$')
 		plt.ylabel(r'$n_{cav}$')
-		plt.savefig( "figures/PHOTONS_" + self.paramchar(times[-1])+ '.pdf', format='pdf'  )
+		plt.savefig( "figures/Entropy_" + self.paramchar(times[-1])+ '.pdf', format='pdf'  )
 		plt.show()
 
 		#-- entropy_plot
-		#plt.plot( times, entropy_arr )
-		#plt.xlabel(r'$t$')
-		#plt.ylabel('Entropy')
-		#plt.savefig( "figures/Entropy_" + self.paramchar(times[-1])+ '.pdf', format='pdf'  )
-		#plt.show()
-		#plt.close()
+		plt.plot( times, entropy_arr )
+		plt.xlabel(r'$t$')
+		plt.ylabel('Entropy')
+		plt.savefig( "figures/Entropy_" + self.paramchar(times[-1])+ '.pdf', format='pdf'  )
+		plt.show()
+		plt.close()
 
 		#-- non log plot
 		#ext = (-max_lambda, max_lambda, -max_lambda, max_lambda)
@@ -497,12 +480,3 @@ class system(object):
 
 			plt.close()
 
-	def photon_distribution( self, rho_in ):
-
-		out = np.zeros( (self.qubit_dim, self.cavity_dim) )
-
-		for i in range(self.qubit_dim):
-			for n in range(self.cavity_dim):
-				out[i,n] = np.abs( rho_in[ i*self.cavity_dim + n,i*self.cavity_dim + n ] )
-		
-		return out
